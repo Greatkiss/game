@@ -1,9 +1,11 @@
 import pandas as pd
+import random
 
 class map:
 	def __init__(self):
-		#map = pd.read_csv("map.csv")
-		self.map = pd.DataFrame([["aaa",100,10,""],["bbb",200,20,""]], columns = ["Name", "Price", "Fee","Owner"])
+		self.map = pd.read_csv("map.csv").fillna('')
+		#self.map = self.map['Price'].astype(int)
+		#self.map = self.map['Fee'].astype(int)
 	def change_owner(self,num,pname):
 		place = self.map["Name"][num]
 		self.map.at[place,"Owner"]=pname
@@ -14,16 +16,39 @@ class player:
 		self.money=1000
 		self.pos=0
 		self.rent=0
+		self.jailcount=0
+	
+	def turn(self):
+		print("its {}'s turn".format(self.pname))
+		while True:
+			print("roll the dice and move : 1")
+			print("negosiation : 2")
+			print("others : 3")
+			try:
+				action = int(input())
+				break
+			except:
+				print("type the correct option")
+		if action == 1:
+			self.move(map.map,map)
+		elif action == 2:
+			print("")
+		elif action == 3:
+			print("")
+		else:
+			print("error")
 
 	def pay(self,you,much):
 		#deal with self money
 		if self.money == 0:
 			self.rent += much
+		#error exception
 		elif self.money<0:
-			print(f"error at {pname}'s money")
+			print("error at {}s money".format(self.pname))
+		#transaction
 		else:
 			self.money -= much
-		#deal with your money
+			print("you paid {} to {}".format(much, you.pname))
 		if you.rent > 0:
 			if you.rent > much:
 				you.rent -= much
@@ -33,24 +58,59 @@ class player:
 		else:
 			you.money += much
 		
-	def move(self,many,map):
+	def move(self,map,mapclass):
+		print("{} roll deces".format(self.pname))
+		many = random.randint(1,12)
+		print("the result of the roll is {}".format(many))
 		self.pos += many
+		#error exception
 		if self.pos < 0:
-			print(f"error at {pname}'s position")
+			print("error at {}s position".format(self.pname))
 		elif self.pos > 39:
 			self.pos -= 40
-		if map["Owner"][self.pos] is not None:
-			if map["Owner"][self.pos] is not self.pname:
-				self.pay(map["Owner"][self.pos],map["Fee"][self.pos])
+		#event
+		print("{}".format(map['Name'][self.pos]))
+		if map['Name'][self.pos] == 'GO':
+			self.money += 400
+		elif map['Name'][self.pos] == '共同基金':
+			print("")
+		elif map['Name'][self.pos] == '刑務所':
+			if self.jailcount > 0:
+				self.jailcount -= 1
+				print("your jail count is {}".format(self.jailcount))
+		elif map['Name'][self.pos] == 'GO TO JAIL':
+			self.pos = 10
+			print("you are in jail")
+			self.jailcount = 3
+		elif map['Name'][self.pos] == 'チャンス':
+			print("")
+		#buy the land
 		else:
-			print(f'you can buy this place :  {map["Name"][self.pos]} with {map["Price"][self.pos]}')
-			print("if you want to buy this place, enter y")
-			ans = input()
-			if ans == 'y':
-				map["Owner"][self.pos] == self.pname
-
+			if map["Owner"][self.pos] != '':
+				if map["Owner"][self.pos] != self.pname:
+					self.pay(map["Owner"][self.pos],map["Fee"][self.pos])
+			else:
+				print('you can buy this place :  {} with {}'.format(map["Name"][self.pos],map["Price"][self.pos]))
+				while True:
+					print("if {} want to buy this place, enter y".format(self.pname))
+					ans = input()
+					if ans == 'y':
+						mapclass.map["Owner"][self.pos] = self.pname
+						break
+					else:
+						print("you will miss the buy chance. Are you sure??? y/n")
+						reans = input()
+						if reans == 'y':
+							break
+						else:
+							continue
+			
 if __name__ == "__main__":
 	map = map()
 	p1 = player("kaneko")
-	print(map.map["Owner"][p1.pos])
-	p1.move(1,map)
+	p2 = player("ayaka")
+	i = 0
+	while i < 10:
+		p1.turn()
+		p2.turn()
+		i+=1
