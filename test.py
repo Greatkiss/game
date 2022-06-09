@@ -10,6 +10,20 @@ class map:
 		place = self.map["Name"][num]
 		self.map.at[place,"Owner"]=pname
 
+class cards:
+	def __init__(self):
+		self.com_cards = pd.read_csv("com_cards.csv")
+		self.cha_cards = pd.read_csv("cha_cards.csv")
+	def draw(self,card_type):
+		print("You draw a {} card".format(card_type))
+		if card_type == "共同基金":
+			print("You draw a {} card".format(card_type))
+			n = random.randint(1,15)
+			print("".format(self.com_cards['Name'][n]))
+		elif card_type == "チャンス":
+			print("You draw a {} card".format(card_type))
+    		
+
 class player:
 	def __init__(self,name):
 		self.pname = name
@@ -21,20 +35,28 @@ class player:
 	def turn(self):
 		print("its {}'s turn".format(self.pname))
 		while True:
-			print("roll the dice and move : 1")
-			print("negosiation : 2")
-			print("others : 3")
+			print("move : 1")
+			print("pay : 2")
 			try:
 				action = int(input())
 				break
 			except:
 				print("type the correct option")
 		if action == 1:
-			self.move(map.map,map)
+			self.move(map.map,map,cards)
 		elif action == 2:
-			print("")
-		elif action == 3:
-			print("")
+			while True:
+				print("who do you want to pay?")
+				you = input()
+				print("how much do you want to pay?")
+				much = input()
+				print("So, you will pay {} to {}. (y/n)".format(much, you))
+				ans = input()
+				if ans == 'y':
+					break
+				else:
+					continue
+			self.pay(you,much)
 		else:
 			print("error")
 
@@ -58,11 +80,27 @@ class player:
 		else:
 			you.money += much
 		
-	def move(self,map,mapclass):
-		print("{} roll deces".format(self.pname))
-		many = random.randint(1,12)
-		print("the result of the roll is {}".format(many))
-		self.pos += many
+	def move(self,map,mapclass,cardclass):
+		print("Your movement is 1:Roll dices, 2:Card")
+		ans = input()
+		if ans == "1":
+			many = self.roll_dice()
+			self.pos += many
+		elif ans == "2":
+			while True:
+				print(map)
+				print("Type the position number of the place")
+				try:
+					dest = int(input())
+				except:
+					dest = 0
+				print("You are going to {}. Are you sure? (y/n)".format(map['Name'][dest]))
+				ans = input()
+				if ans == 'y':
+					break
+				else:
+					continue
+			self.pos = dest
 		#error exception
 		if self.pos < 0:
 			print("error at {}s position".format(self.pname))
@@ -73,7 +111,7 @@ class player:
 		if map['Name'][self.pos] == 'GO':
 			self.money += 400
 		elif map['Name'][self.pos] == '共同基金':
-			print("")
+			cardclass.draw('共同基金')
 		elif map['Name'][self.pos] == '刑務所':
 			if self.jailcount > 0:
 				self.jailcount -= 1
@@ -83,7 +121,7 @@ class player:
 			print("you are in jail")
 			self.jailcount = 3
 		elif map['Name'][self.pos] == 'チャンス':
-			print("")
+			cardclass.draw('チャンス')
 		#buy the land
 		else:
 			if map["Owner"][self.pos] != '':
@@ -104,13 +142,34 @@ class player:
 							break
 						else:
 							continue
-			
+	def roll_dice(self):
+		print("{} roll deces".format(self.pname))
+		many = random.randint(1,12)
+		print("the result of the roll is {}".format(many))
+		return many
+
+
 if __name__ == "__main__":
 	map = map()
+	cards = cards()
 	p1 = player("kaneko")
 	p2 = player("ayaka")
 	i = 0
 	while i < 10:
-		p1.turn()
-		p2.turn()
+		while True:
+			p1.turn()
+			print("are you done? (y/n)")
+			ans = input()
+			if ans == 'y':
+				break
+			else:
+				continue
+		while True:
+			p2.turn()
+			print("are you done? (y/n)")
+			ans = input()
+			if ans == 'y':
+				break
+			else:
+				continue
 		i+=1
